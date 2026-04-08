@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Biblioteca Saber Libre AR</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+    <script src="https://unpkg.com/aframe-layout-component/dist/aframe-layout-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component/dist/aframe-look-at-component.min.js"></script>
+    <script defer src="app.js"></script>
+</head>
+
+<body>
+    <main class="hud">
+        <h1>Biblioteca Saber Libre - Taller de requisitos en AR</h1>
+        <p class="subtitle">
+            Apunta la camara al marcador HIRO para ver la escena. Cada etapa muestra una tarea del taller con etiquetas
+            AR interactivas.
+        </p>
+
+        <div class="controls" role="group" aria-label="Etapas del proceso">
+            <button class="stage-btn active" data-stage="tarea1" type="button">1. Tarea 1</button>
+            <button class="stage-btn" data-stage="tarea2" type="button">2. Tarea 2</button>
+            <button class="stage-btn" data-stage="tarea3" type="button">3. Tarea 3</button>
+            <button class="stage-btn" data-stage="final" type="button">4. Debate final</button>
+        </div>
+
+        <div class="mode-controls">
+            <button id="preview-toggle" class="preview-btn" type="button" aria-pressed="false">
+                Activar vista previa PC (sin marcador)
+            </button>
+        </div>
+
+        <section id="summary-panel" class="panel">
+            <div class="panel-head">
+                <h2 id="panel-title">Tarea 1 - Empatia (zapatos del usuario)</h2>
+                <button id="panel-toggle" class="panel-toggle-btn" type="button" aria-expanded="true"
+                    aria-controls="panel-content">
+                    Contraer texto
+                </button>
+            </div>
+
+            <div id="panel-content" class="panel-content">
+                <p id="panel-text">Identificar dolores reales antes de definir funcionalidades.</p>
+                <ul id="panel-points" class="panel-points"></ul>
+                <div class="kpis">
+                    <article>
+                        <span id="kpi-label-1" class="kpi-label">Dolor principal</span>
+                        <strong id="kpi-1">Perdida de libros</strong>
+                    </article>
+                    <article>
+                        <span id="kpi-label-2" class="kpi-label">Friccion</span>
+                        <strong id="kpi-2">Registro manual</strong>
+                    </article>
+                    <article>
+                        <span id="kpi-label-3" class="kpi-label">Necesidad</span>
+                        <strong id="kpi-3">Trazabilidad simple</strong>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <p id="tracking-status" class="tracking-status">Estado AR: iniciando motor de escena...</p>
+    </main>
+
+    <a-scene embedded renderer="logarithmicDepthBuffer: true; colorManagement: true" vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false"
+        cursor="rayOrigin: mouse; fuse: false"
+        raycaster="objects: .toggle-hit; far: 24; interval: 16"
+        arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
+        <a-assets timeout="20000">
+            <a-asset-item id="model-estante" src="assets/models/02_estante_libros.glb"></a-asset-item>
+            <a-asset-item id="model-mesa" src="assets/models/03_mesa_prestamo.glb"></a-asset-item>
+            <a-asset-item id="model-bibliotecario" src="assets/models/04_bibliotecario.glb"></a-asset-item>
+            <a-asset-item id="model-estudiante" src="assets/models/05_estudiante.glb"></a-asset-item>
+            <a-asset-item id="model-libro" src="assets/models/06_libro.glb"></a-asset-item>
+            <a-asset-item id="model-buzon" src="assets/models/07_buzon_devolucion.glb"></a-asset-item>
+            <a-asset-item id="model-flecha" src="assets/models/08_flecha_ruta.glb"></a-asset-item>
+        </a-assets>
+
+        <a-marker id="hiro-marker" preset="hiro" smooth="true" emitevents="true">
+            <a-entity id="escena-raiz" position="0 0 0" scale="1 1 1">
+                <a-entity light="type: ambient; color: #ffffff; intensity: 0.95"></a-entity>
+                <a-entity light="type: directional; color: #fff8dc; intensity: 0.6" position="0.7 1 0.6"></a-entity>
+
+                <a-circle position="0 0.003 0" rotation="-90 0 0" radius="1.02" color="#d6d4cc"
+                    opacity="0.72"></a-circle>
+                <a-ring position="0 0.004 0" rotation="-90 0 0" radius-inner="1.02" radius-outer="1.06"
+                    color="#2e5f40"></a-ring>
+
+                <a-entity id="library-shell">
+                    <a-plane position="0 0.005 0" rotation="-90 0 0" width="1.08" height="1.08"
+                        material="color: #ded8ca; roughness: 1; metalness: 0"></a-plane>
+
+                    <a-plane position="0 0.22 -0.52" width="1.08" height="0.44"
+                        material="color: #b88449; roughness: 1; metalness: 0"></a-plane>
+                    <a-plane position="-0.52 0.22 0" rotation="0 90 0" width="1.04" height="0.44"
+                        material="color: #9d6f45; roughness: 1; metalness: 0"></a-plane>
+                    <a-plane position="0.52 0.22 0" rotation="0 -90 0" width="1.04" height="0.44"
+                        material="color: #9d6f45; roughness: 1; metalness: 0"></a-plane>
+
+                    <a-box position="0 0.43 -0.52" width="1.08" height="0.02" depth="0.03" color="#6c4d2f"></a-box>
+                    <a-box position="-0.52 0.43 0" width="0.03" height="0.02" depth="1.08" color="#6c4d2f"></a-box>
+                    <a-box position="0.52 0.43 0" width="0.03" height="0.02" depth="1.08" color="#6c4d2f"></a-box>
+
+                    <a-entity position="0 0.31 -0.41" rotation="0 0 0">
+                        <a-plane width="0.52" height="0.12" color="#f7f2dd" opacity="0.92"></a-plane>
+                        <a-text value="Biblioteca Saber Libre" align="center" color="#2a2411" width="1.1"
+                            position="0 0 0.01"></a-text>
+                    </a-entity>
+
+                    <a-entity position="0 0.39 0.32">
+                        <a-plane width="0.42" height="0.09" color="#edf9ee" opacity="0.85"></a-plane>
+                        <a-text value="Vista interior" align="center" color="#173021" width="0.7"
+                            position="0 0 0.01"></a-text>
+                    </a-entity>
+                </a-entity>
+
+                <a-entity id="stage-tarea1" class="stage-group" visible="true">
+
+                    <a-entity position="0 1.2 0" look-at="[camera]">
+                        <a-plane width="1.5" height="0.2" color="#215f3f" opacity="0.9"></a-plane>
+                        <a-text value="TAREA 1: MAPA DE EMPATIA" align="center" color="#ffffff" width="1.4"
+                            position="0 0 0.01"></a-text>
+                    </a-entity>
+
+                    <a-entity position="-1.4 0.6 0" look-at="[camera]">
+
+                        <a-entity position="0 0.15 0">
+                            <a-plane width="1.2" height="0.3" color="#215f3f" opacity="0.85"></a-plane>
+                            <a-text value="BIBLIOTECARIO" align="center" color="#ffffff" width="1.1"
+                                position="0 0.05 0.01"></a-text>
+                            <a-text value="Perfil: Mayor, prefiere el papel." align="center" color="#f4ead3" width="0.9"
+                                position="0 -0.05 0.01"></a-text>
+                        </a-entity>
+
+                        <a-entity position="0 -0.15 0">
+                            <a-plane width="1.2" height="0.25" color="#f4ead3" opacity="0.9"></a-plane>
+                            <a-text value="DOLOR PRINCIPAL:" align="center" color="#2a2411" width="1.1"
+                                position="0 0.05 0.01"></a-text>
+                            <a-text value="Miedo a perder el control e inventario." align="center" color="#d32f2f"
+                                width="1.0" position="0 -0.05 0.01"></a-text>
+                        </a-entity>
+
+                    </a-entity>
+
+                    <a-entity position="1.4 0.6 0" look-at="[camera]">
+
+                        <a-entity position="0 0.15 0">
+                            <a-plane width="1.2" height="0.3" color="#215f3f" opacity="0.85"></a-plane>
+                            <a-text value="ESTUDIANTES" align="center" color="#ffffff" width="1.1"
+                                position="0 0.05 0.01"></a-text>
+                            <a-text value="Perfil: Digitales, buscan rapidez." align="center" color="#f4ead3"
+                                width="0.9" position="0 -0.05 0.01"></a-text>
+                        </a-entity>
+
+                        <a-entity position="0 -0.15 0">
+                            <a-plane width="1.2" height="0.25" color="#f4ead3" opacity="0.9"></a-plane>
+                            <a-text value="FRUSTRACION:" align="center" color="#2a2411" width="1.1"
+                                position="0 0.05 0.01"></a-text>
+                            <a-text value="Esperar filas por busquedas manuales." align="center" color="#d32f2f"
+                                width="1.0" position="0 -0.05 0.01"></a-text>
+                        </a-entity>
+
+                    </a-entity>
+
+                    <a-entity position="0 0.1 0.4" look-at="[camera]">
+                        <a-plane width="1.8" height="0.2" color="#e9f4ff" opacity="0.9"></a-plane>
+                        <a-text value="DIAGNOSTICO: Falta de trazabilidad en tiempo real." align="center"
+                            color="#1d2f44" width="1.7" position="0 0 0.01"></a-text>
+                    </a-entity>
+
+                    <a-entity id="tarea1-models" position="0 0.01 0.24">
+                        <a-entity gltf-model="#model-estante" position="0 0 -0.20" model-fallback="shelf"
+                            fit-model="height: 0.36; width: 0.32; depth: 0.18"></a-entity>
+
+                        <a-entity gltf-model="#model-mesa" position="0 0 0.02" model-fallback="desk"
+                            fit-model="height: 0.26; width: 0.54; depth: 0.34"></a-entity>
+
+                        <a-entity gltf-model="#model-libro" position="0 0.11 0.05" model-fallback="book"
+                            fit-model="height: 0.10; width: 0.15; depth: 0.12"></a-entity>
+
+                        <a-entity gltf-model="#model-bibliotecario" position="-0.44 0 0.03" rotation="0 22 0"
+                            model-fallback="librarian" fit-model="height: 0.34; width: 0.22; depth: 0.20"></a-entity>
+
+                        <a-entity gltf-model="#model-estudiante" position="0.44 0 0.03" rotation="0 -22 0"
+                            model-fallback="student" fit-model="height: 0.34; width: 0.22; depth: 0.20"></a-entity>
+                    </a-entity>
+
+                </a-entity>
+
+                <a-entity id="stage-tarea2" class="stage-group" visible="false">
+                    <a-entity position="0 0.8 0.24" layout="type: column; margin: 0.12">
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.96" height="0.14" color="#215f3f" opacity="0.82"></a-plane>
+                            <a-text value="Tarea 2 — Funciones Vitales" align="center" color="#ffffff" width="0.86"
+                                position="0 0 0.01" look-at="[camera]"></a-text>
+                        </a-entity>
+                    </a-entity>
+
+                    <a-entity position="-0.9 0.54 0.24" rotation="0 15 0" layout="type: column; margin: 0.1">
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.74" height="0.15" color="#215f3f" opacity="0.82"></a-plane>
+                            <a-text value="LAS 4 FUNCIONES VITALES" align="center" color="#ffffff" width="0.62"
+                                position="0 0 0.01" look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.74" height="0.18" color="#edf9ee" opacity="0.82"></a-plane>
+                            <a-text
+                                value="F1 · REGISTRO DE PRÉSTAMO\nAnotar quién llevó qué libro y en qué fecha, digitalmente\nResuelve el dolor del cuaderno"
+                                align="left" color="#173021" width="0.6" position="-0.3 0 0.01" wrap-count="24"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.74" height="0.18" color="#edf9ee" opacity="0.82"></a-plane>
+                            <a-text
+                                value="F2 · ALERTA DE VENCIMIENTO\nNotificación automática por WhatsApp o SMS\nLlega 2 días antes de la fecha límite"
+                                align="left" color="#173021" width="0.6" position="-0.3 0 0.01" wrap-count="24"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+                    </a-entity>
+
+                    <a-entity position="0.9 0.54 0.24" rotation="0 -15 0" layout="type: column; margin: 0.1">
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.74" height="0.15" color="#215f3f" opacity="0.82"></a-plane>
+                            <a-text value="LAS 4 FUNCIONES VITALES" align="center" color="#ffffff" width="0.62"
+                                position="0 0 0.01" look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.74" height="0.18" color="#edf9ee" opacity="0.82"></a-plane>
+                            <a-text
+                                value="F3 · CONSULTA DE DISPONIBILIDAD\nVer si un libro está disponible o prestado\nSin preguntarle al bibliotecario"
+                                align="left" color="#173021" width="0.6" position="-0.3 0 0.01" wrap-count="24"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.74" height="0.18" color="#edf9ee" opacity="0.82"></a-plane>
+                            <a-text
+                                value="F4 · HISTORIAL POR USUARIO\nSaber cuántos libros llevó cada persona\ny si tiene pendientes sin devolver"
+                                align="left" color="#173021" width="0.6" position="-0.3 0 0.01" wrap-count="24"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+                    </a-entity>
+
+                    <a-entity position="0 0.02 0.24" layout="type: column; margin: 0.09">
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.94" height="0.14" color="#215f3f" opacity="0.82"></a-plane>
+                            <a-text value="LAS 6 ELIMINADAS" align="center" color="#ffffff" width="0.74"
+                                position="0 0 0.01" look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.94" height="0.16" color="#f1f1f1" opacity="0.82"></a-plane>
+                            <a-text
+                                value="FN1 · CATÁLOGO EN REALIDAD VIRTUAL (sin hardware)\nFN2 · APP DE RESEÑAS (no controla préstamos)"
+                                align="center" color="#4a4a4a" width="0.76" position="0 0 0.01" wrap-count="26"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.94" height="0.16" color="#f1f1f1" opacity="0.82"></a-plane>
+                            <a-text
+                                value="FN3 · IA RECOMENDADORA (sobrecarga técnica)\nFN4 · NUBE MULTIBIBLIOTECA (innecesaria aquí)"
+                                align="center" color="#4a4a4a" width="0.76" position="0 0 0.01" wrap-count="26"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.94" height="0.16" color="#f1f1f1" opacity="0.82"></a-plane>
+                            <a-text
+                                value="FN5 · GAMIFICACIÓN (distractor)\nFN6 · ESCÁNER ISBN (muchos libros viejos sin código)\nNo resuelven el dolor central"
+                                align="center" color="#4a4a4a" width="0.76" position="0 0 0.01" wrap-count="26"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+                    </a-entity>
+
+                    <a-entity gltf-model="#model-mesa" position="-0.28 0.01 0.16" scale="0.58 0.58 0.58"
+                        model-fallback="desk"></a-entity>
+
+                    <a-entity gltf-model="#model-estante" position="0.3 0.01 0.14" scale="0.34 0.34 0.34"
+                        model-fallback="shelf"></a-entity>
+                </a-entity>
+
+                <a-entity id="stage-tarea3" class="stage-group" visible="false">
+                    <a-entity position="0 0.8 0.24" layout="type: column; margin: 0.12">
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.98" height="0.14" color="#215f3f" opacity="0.82"></a-plane>
+                            <a-text value="Tarea 3 — Los 3 Pilares de Restricción" align="center" color="#ffffff"
+                                width="0.9" position="0 0 0.01" look-at="[camera]"></a-text>
+                        </a-entity>
+                    </a-entity>
+
+                    <a-entity position="-0.92 0.5 0.24" rotation="0 14 0" layout="type: column; margin: 0.1">
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.72" height="0.15" color="#215f3f" opacity="0.82"></a-plane>
+                            <a-text value="TECNOLOGÍA" align="center" color="#ffffff" width="0.58" position="0 0 0.01"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.72" height="0.15" color="#e9f4ff" opacity="0.82"></a-plane>
+                            <a-text value="Computador de escritorio antiguo\nSin touchscreen" align="center"
+                                color="#1d2f44" width="0.56" position="0 0 0.01" wrap-count="20"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.72" height="0.15" color="#e9f4ff" opacity="0.82"></a-plane>
+                            <a-text value="Sin impresora de etiquetas\nSin tablet disponible" align="center"
+                                color="#1d2f44" width="0.56" position="0 0 0.01" wrap-count="20"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.72" height="0.15" color="#e9f4ff" opacity="0.82"></a-plane>
+                            <a-text value="WiFi inestable\nLa solución no debe depender de conexión constante"
+                                align="center" color="#1d2f44" width="0.56" position="0 0 0.01" wrap-count="20"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+                    </a-entity>
+
+                    <a-entity position="0 0.5 0.24" layout="type: column; margin: 0.1">
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.72" height="0.15" color="#215f3f" opacity="0.82"></a-plane>
+                            <a-text value="PRESUPUESTO" align="center" color="#ffffff" width="0.58" position="0 0 0.01"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.72" height="0.16" color="#f4ead3" opacity="0.82"></a-plane>
+                            <a-text value="Biblioteca sin ánimo de lucro\nDepende de donaciones" align="center"
+                                color="#2a2411" width="0.56" position="0 0 0.01" wrap-count="20"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.72" height="0.15" color="#f4ead3" opacity="0.82"></a-plane>
+                            <a-text value="No puede pagar suscripciones" align="center" color="#2a2411" width="0.56"
+                                position="0 0 0.01" wrap-count="20" look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.72" height="0.15" color="#f4ead3" opacity="0.82"></a-plane>
+                            <a-text value="Gratis o pago único muy bajo" align="center" color="#2a2411" width="0.56"
+                                position="0 0 0.01" wrap-count="20" look-at="[camera]"></a-text>
+                        </a-entity>
+                    </a-entity>
+
+                    <a-entity position="0.92 0.5 0.24" rotation="0 -14 0" layout="type: column; margin: 0.1">
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.72" height="0.15" color="#215f3f" opacity="0.82"></a-plane>
+                            <a-text value="TIEMPO" align="center" color="#ffffff" width="0.58" position="0 0 0.01"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.72" height="0.16" color="#f4ead3" opacity="0.82"></a-plane>
+                            <a-text value="Resultados en máximo 2 semanas" align="center" color="#2a2411" width="0.56"
+                                position="0 0 0.01" wrap-count="20" look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.72" height="0.16" color="#f4ead3" opacity="0.82"></a-plane>
+                            <a-text value="No puede cerrar la biblioteca\nSin tiempo para cursos largos" align="center"
+                                color="#2a2411" width="0.56" position="0 0 0.01" wrap-count="20"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+                    </a-entity>
+
+                    <a-entity position="0 0.02 0.24" layout="type: column; margin: 0.1">
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.92" height="0.15" color="#215f3f" opacity="0.82"></a-plane>
+                            <a-text value="ALFABETIZACIÓN DIGITAL" align="center" color="#ffffff" width="0.72"
+                                position="0 0 0.01" look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.92" height="0.18" color="#edf9ee" opacity="0.82"></a-plane>
+                            <a-text
+                                value="BIBLIOTECARIO\nNivel básico\nSabe usar Word y correo\nNunca ha usado una app web\nLetras grandes y pasos mínimos"
+                                align="center" color="#173021" width="0.72" position="0 0 0.01" wrap-count="26"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.92" height="0.18" color="#edf9ee" opacity="0.82"></a-plane>
+                            <a-text
+                                value="NIÑOS DE PRIMARIA\nNivel medio\nUsan celular para juegos y YouTube\nNo manejan formularios complejos\nConsulta de disponibilidad a 1 toque"
+                                align="center" color="#173021" width="0.72" position="0 0 0.01" wrap-count="26"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+                    </a-entity>
+
+                    <a-entity gltf-model="#model-bibliotecario" position="-0.36 0.01 0.14" rotation="0 18 0"
+                        scale="0.22 0.22 0.22" model-fallback="librarian"></a-entity>
+
+                    <a-entity gltf-model="#model-estudiante" position="0 0.01 0.14" rotation="0 -10 0"
+                        scale="0.22 0.22 0.22" model-fallback="student"></a-entity>
+
+                    <a-entity gltf-model="#model-buzon" position="0.36 0.01 0.14" scale="0.22 0.22 0.22"
+                        model-fallback="return-box"></a-entity>
+                </a-entity>
+
+                <a-entity id="stage-final" class="stage-group" visible="false">
+                    <a-entity position="0 0.46 0.24" layout="type: column; margin: 0.12">
+                        <a-entity look-at="[camera]">
+                            <a-plane width="1.0" height="0.14" color="#215f3f" opacity="0.82"></a-plane>
+                            <a-text value="Solución en debate" align="center" color="#ffffff" width="0.82"
+                                position="0 0 0.01" look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.96" height="0.18" color="#f4ead3" opacity="0.82"></a-plane>
+                            <a-text
+                                value="La solución final se debatirá en clase.\nEsta fase queda abierta para validación y discusión."
+                                align="center" color="#2a2411" width="0.76" position="0 0 0.01" wrap-count="28"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+
+                        <a-entity look-at="[camera]">
+                            <a-plane width="0.96" height="0.14" color="#edf9ee" opacity="0.82"></a-plane>
+                            <a-text value="Pendiente de definición con el grupo y el profesor" align="center"
+                                color="#173021" width="0.74" position="0 0 0.01" wrap-count="28"
+                                look-at="[camera]"></a-text>
+                        </a-entity>
+                    </a-entity>
+                </a-entity>
+            </a-entity>
+        </a-marker>
+
+        <a-entity id="main-camera" camera>
+            <a-entity id="preview-root" visible="false" position="0 -0.45 -1.45"></a-entity>
+        </a-entity>
+    </a-scene>
+</body>
+
+</html>
