@@ -839,7 +839,7 @@ function buildStageTarea2Interactive(stageEl) {
   stageEl.appendChild(rightPanel);
 
   const bottomPanel = createTogglePanel({
-    position: "0 -0.20 0.42",
+    position: "0 0.10 0.42",
     width: 3.2,
     height: 1.04,
     header: "LAS 6 ELIMINADAS",
@@ -1060,7 +1060,7 @@ function buildStageTarea3Interactive(stageEl) {
   stageEl.appendChild(rightPanel);
 
   const bottomPanel = createTogglePanel({
-    position: "0 -0.20 0.42",
+    position: "0 0.10 0.42",
     width: 3.2,
     height: 1.18,
     header: "TIEMPO + ALFABETIZACION DIGITAL",
